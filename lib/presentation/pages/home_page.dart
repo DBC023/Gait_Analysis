@@ -179,6 +179,7 @@ class _MyHomePageState extends State<MyHomePage> {
               leftKnee: leftKneeAngle,
               rightKnee: rightKneeAngle,
             );
+            print("FIREBASE: Guardando sesión del paciente: $patientSession");
             await _savePatientSessionUseCase.execute(patientSession);
             frameCount++;
             _frameSaveCounter = 0; // Reinicia el contador de guardado

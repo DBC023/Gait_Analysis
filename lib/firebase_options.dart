@@ -50,12 +50,11 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyDRQd8OElcJ8KQGT59fxfSIlXm_-R2SMmU',
-    appId: '1:328450857297:android:21319a96f2ab1e8d529b70',
-    messagingSenderId: '328450857297',
-    projectId: 'gaia-pose-analysis',
-    databaseURL: 'https://gaia-pose-analysis-default-rtdb.firebaseio.com',
-    storageBucket: 'gaia-pose-analysis.firebasestorage.app',
+    apiKey: 'AIzaSyAhK-TiKeRS6irkDygE7w7P4ez-rweFJ9k',
+    appId: '1:591806388630:android:be8df8b3c7d31b9f8b25b7',
+    messagingSenderId: '591806388630',
+    projectId: 'gaitanalysis-7351a',
+    storageBucket: 'gaitanalysis-7351a.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
