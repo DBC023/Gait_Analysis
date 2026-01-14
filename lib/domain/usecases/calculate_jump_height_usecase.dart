@@ -30,20 +30,27 @@ class CalculateJumpHeightUseCase {
     required Pose pose,
     required double currentYMax,
     required double currentYMin,
+    bool isMeasuring = true, // Control flag for the timer logic
   }) {
     final landmarks = pose.landmarks;
 
-    final leftAnkle = landmarks[PoseLandmarkType.leftFootIndex];
-    final rightAnkle = landmarks[PoseLandmarkType.rightFootIndex];
+    // Corrected: Use Ankle instead of FootIndex (Toe) for better stability and to match variable name
+    final leftAnkle = landmarks[PoseLandmarkType.leftAnkle];
+    final rightAnkle = landmarks[PoseLandmarkType.rightAnkle];
 
     double currentY = 0;
+
+    // Improved: Check likelihood to reduce errors from noise
+    final bool isLeftValid = leftAnkle != null && leftAnkle.likelihood > 0.5;
+    final bool isRightValid = rightAnkle != null && rightAnkle.likelihood > 0.5;
+
     // Usamos el Tobillo para una medición más precisa del despegue y aterrizaje.
-    if (leftAnkle != null && rightAnkle != null) {
+    if (isLeftValid && isRightValid) {
       // Promedio para robustez
       currentY = (leftAnkle.y + rightAnkle.y) / 2;
-    } else if (leftAnkle != null) {
+    } else if (isLeftValid) {
       currentY = leftAnkle.y;
-    } else if (rightAnkle != null) {
+    } else if (isRightValid) {
       currentY = rightAnkle.y;
     }
 
@@ -53,7 +60,19 @@ class CalculateJumpHeightUseCase {
         currentY: 0,
         yMax: currentYMax,
         yMin: currentYMin,
-        heightInPixels: currentYMax - currentYMin,
+        heightInPixels:
+            (currentYMin == double.infinity) ? 0.0 : currentYMax - currentYMin,
+      );
+    }
+
+    // If we are not measuring (e.g. during countdown), return current Y but do not update Min/Max stats
+    if (!isMeasuring) {
+      return JumpHeightResult(
+        currentY: currentY,
+        yMax: currentYMax,
+        yMin: currentYMin,
+        heightInPixels:
+            (currentYMin == double.infinity) ? 0.0 : currentYMax - currentYMin,
       );
     }
 

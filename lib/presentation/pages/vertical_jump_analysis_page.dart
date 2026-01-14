@@ -3,18 +3,18 @@
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:google_mlkit_pose_detection/google_mlkit_pose_detection.dart';
+import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-// Importaciones de Arquitectura Limpia (adaptadas a los nombres del salto)
-import '../../domain/usecases/calculate_jump_height_usecase.dart'; // NUEVO CASO DE USO
+import '../../domain/usecases/calculate_jump_height_usecase.dart';
 import '../../data/repositories/mlkit_pose_detection_repository_impl.dart';
 import '../../data/repositories/firestore_patient_data_repository_impl.dart';
-//import '../../domain/usecases/save_vertical_jump_session_usecase.dart'; // ASUMIDO
-import '../../domain/entities/vertical_jump_session.dart'; // ASUMIDO
+
+import '../../domain/entities/vertical_jump_session.dart';
 import '../../main.dart';
 import '../widgets/optimized_pose_painter.dart';
 
@@ -44,6 +44,12 @@ class _VerticalJumpAnalysisPageState extends State<VerticalJumpAnalysisPage> {
   double _yMaxTracker = 0.0; // Y más grande = Punto más bajo
   double _jumpHeightInPixels = 0.0;
   double _jumpHeightInCm = 0.0;
+
+  // Timer & Control Variables
+  Timer? _timer;
+  int _countdown = 3;
+  bool _isMeasuring = false;
+  String _statusMessage = "Press Start";
 
   // 📏 CALIBRACIÓN: Factor de conversión (ejemplo, 10 píxeles por centímetro)
   static const double PIXELS_PER_CM_FACTOR = 10.0;
@@ -96,7 +102,7 @@ class _VerticalJumpAnalysisPageState extends State<VerticalJumpAnalysisPage> {
     }
 
     _controller = CameraController(
-      cameras[0],
+      cameras[1],
       ResolutionPreset.medium,
       imageFormatGroup:
           Platform.isAndroid
@@ -157,6 +163,44 @@ class _VerticalJumpAnalysisPageState extends State<VerticalJumpAnalysisPage> {
 
   // --- FIN MÉTODOS DE CÁMARA E INICIALIZACIÓN ---
 
+  // --- TIMER LOGIC ---
+  void _startJumpSequence() {
+    setState(() {
+      _countdown = 3;
+      _statusMessage = "3";
+      _isMeasuring = false;
+      // Reset trackers
+      _yMinTracker = double.infinity;
+      _yMaxTracker = 0.0;
+      _jumpHeightInPixels = 0.0;
+      _jumpHeightInCm = 0.0;
+    });
+
+    _timer?.cancel();
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+      setState(() {
+        if (_countdown > 1) {
+          _countdown--;
+          _statusMessage = "$_countdown";
+        } else if (_countdown == 1) {
+          _countdown--;
+          _statusMessage = "JUMP!";
+          _isMeasuring = true; // Start measuring now!
+          timer.cancel();
+
+          // Optional: Auto-stop measuring after 4 seconds to freeze the result
+          Future.delayed(const Duration(seconds: 4), () {
+            if (mounted && _isMeasuring) setState(() => _isMeasuring = false);
+          });
+        }
+      });
+    });
+  }
+
   // --- LÓGICA DE PROCESAMIENTO DE FRAME ---
 
   void _processFrameAsync() async {
@@ -177,6 +221,7 @@ class _VerticalJumpAnalysisPageState extends State<VerticalJumpAnalysisPage> {
           pose: pose,
           currentYMax: _yMaxTracker,
           currentYMin: _yMinTracker,
+          isMeasuring: _isMeasuring,
         );
 
         if (mounted) {
@@ -356,6 +401,7 @@ class _VerticalJumpAnalysisPageState extends State<VerticalJumpAnalysisPage> {
 
   @override
   void dispose() {
+    _timer?.cancel();
     _controller?.dispose();
     poseDetector.close();
     super.dispose();
@@ -412,6 +458,32 @@ class _VerticalJumpAnalysisPageState extends State<VerticalJumpAnalysisPage> {
       ),
     );
 
+    // Countdown / Status Overlay (Big Text in Center)
+    if (_statusMessage == "3" ||
+        _statusMessage == "2" ||
+        _statusMessage == "1" ||
+        _statusMessage == "JUMP!") {
+      stackChildren.add(
+        Center(
+          child: Text(
+            _statusMessage,
+            style: const TextStyle(
+              color: Colors.yellowAccent,
+              fontSize: 100,
+              fontWeight: FontWeight.bold,
+              shadows: [
+                Shadow(
+                  blurRadius: 20,
+                  color: Colors.black,
+                  offset: Offset(0, 0),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
     // Overlay de resultados (Actualizado para Salto)
     stackChildren.add(
       Positioned(
@@ -465,6 +537,27 @@ class _VerticalJumpAnalysisPageState extends State<VerticalJumpAnalysisPage> {
               Text(
                 "Calibration Factor: 1 cm = ${PIXELS_PER_CM_FACTOR.toStringAsFixed(2)} px",
                 style: const TextStyle(color: Colors.grey, fontSize: 12),
+              ),
+              const SizedBox(height: 12),
+              Center(
+                child: ElevatedButton(
+                  onPressed: _startJumpSequence,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orangeAccent,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 30,
+                      vertical: 12,
+                    ),
+                  ),
+                  child: Text(
+                    _isMeasuring ? "MEASURING..." : "START TIMER",
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
+                  ),
+                ),
               ),
             ],
           ),

@@ -1,4 +1,6 @@
+import 'package:bmapp/presentation/pages/acceleration_measure_page.dart';
 import 'package:bmapp/presentation/pages/analysis_page.dart';
+import 'package:bmapp/presentation/pages/routine_page.dart';
 import 'package:bmapp/presentation/pages/vertical_jump_analysis_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; // Para Numeric Input
@@ -46,16 +48,33 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  // Lógica para Navegación a la Medición de Salto Vertical
   void _startVerticalJumpAnalysis() {
-    // Aquí podrías agregar lógica si el Salto Vertical también necesita una ID
+    // Agregar lógica si el Salto Vertical también necesita una ID
 
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => VerticalJumpAnalysisPage()),
     );
+  }
 
-    // Temporalmente, usa un AlertDialog si la página no está creada
+  void _startAccelerationMeasure() {
+    // Agregar lógica si el Salto Vertical también necesita una ID
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => AccelerationMeasurePage()),
+    );
+  }
+
+  void _startRoutinePage() {
+    // Agregar lógica si el Salto Vertical también necesita una ID
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => RoutinePage(identification: "55", week: 1),
+      ),
+    );
   }
 
   @override
@@ -74,6 +93,11 @@ class _HomePageState extends State<HomePage> {
 
             // Sección de Medición de Salto Vertical
             _buildVerticalJumpSection(),
+            //Seccion de Medicion de Aceleracion
+            const SizedBox(height: 40),
+            _buildAccelerationMeasure(),
+            const SizedBox(height: 40),
+            _buildRoutineSection(),
           ],
         ),
       ),
@@ -177,6 +201,69 @@ class _HomePageState extends State<HomePage> {
                 'Measure Vertical Jump',
                 style: TextStyle(fontSize: 16),
               ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.teal, // Color diferente para distinguir
+                padding: const EdgeInsets.symmetric(vertical: 15),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAccelerationMeasure() {
+    return Card(
+      elevation: 4,
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            const Text(
+              '3. Acceleration Measurement',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 15),
+
+            // Botón para iniciar Medición de Salto Vertical
+            ElevatedButton.icon(
+              onPressed: _startAccelerationMeasure,
+              icon: const Icon(Icons.height),
+              label: const Text(
+                'Measure Acceleration',
+                style: TextStyle(fontSize: 16),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.teal, // Color diferente para distinguir
+                padding: const EdgeInsets.symmetric(vertical: 15),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRoutineSection() {
+    return Card(
+      elevation: 4,
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            const Text(
+              '4. Routine',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 15),
+
+            // Botón para iniciar Medición de Salto Vertical
+            ElevatedButton.icon(
+              onPressed: _startRoutinePage,
+              icon: const Icon(Icons.height),
+              label: const Text('Routine Page', style: TextStyle(fontSize: 16)),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.teal, // Color diferente para distinguir
                 padding: const EdgeInsets.symmetric(vertical: 15),
